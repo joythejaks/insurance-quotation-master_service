@@ -19,21 +19,21 @@ func SetupCountryRoutes(r *gin.Engine, countryHandler *handler.CountryHandler, s
 			countries.POST("", // Create Country
 				middleware.AuthMiddleware(secret),
 				middleware.RoleMiddleware("ADMIN"),
-				middleware.PermissionMiddleware("manage_countries"), // Contoh permission
+				middleware.PermissionMiddleware("manage_master_data"), // Contoh permission
 				countryHandler.CreateCountry,
 			)
 
 			countries.PUT("/:id", // Update Country
 				middleware.AuthMiddleware(secret),
 				middleware.RoleMiddleware("ADMIN"),
-				middleware.PermissionMiddleware("manage_countries"), // Contoh permission
+				middleware.PermissionMiddleware("manage_master_data"), // Contoh permission
 				countryHandler.UpdateCountry,
 			)
 
 			countries.DELETE("/:id", // Delete Country
 				middleware.AuthMiddleware(secret),
 				middleware.RoleMiddleware("ADMIN"),
-				middleware.PermissionMiddleware("manage_countries"), // Contoh permission
+				middleware.PermissionMiddleware("manage_master_data"), // Contoh permission
 				countryHandler.DeleteCountry,
 			)
 		}
