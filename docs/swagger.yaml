@@ -1,0 +1,684 @@
+basePath: /api/v1
+definitions:
+  dto.CreateCountryRequest:
+    properties:
+      code:
+        maxLength: 10
+        type: string
+      name:
+        maxLength: 100
+        type: string
+    required:
+      - code
+      - name
+    type: object
+  dto.CreateCurrencyRequest:
+    properties:
+      code:
+        maxLength: 10
+        type: string
+      name:
+        maxLength: 100
+        type: string
+      symbol:
+        maxLength: 10
+        type: string
+    required:
+      - code
+      - name
+    type: object
+  dto.CreateOccupationRequest:
+    properties:
+      code:
+        maxLength: 50
+        type: string
+      name:
+        maxLength: 255
+        type: string
+    required:
+      - code
+      - name
+    type: object
+  dto.CreateRelationshipRequest:
+    properties:
+      code:
+        maxLength: 50
+        type: string
+      name:
+        maxLength: 100
+        type: string
+    required:
+      - code
+      - name
+    type: object
+  dto.UpdateCountryRequest:
+    properties:
+      is_active:
+        type: boolean
+      name:
+        maxLength: 100
+        type: string
+    required:
+      - is_active
+    type: object
+  dto.UpdateCurrencyRequest:
+    properties:
+      is_active:
+        type: boolean
+      name:
+        maxLength: 100
+        type: string
+      symbol:
+        maxLength: 10
+        type: string
+    required:
+      - is_active
+    type: object
+  dto.UpdateOccupationRequest:
+    properties:
+      is_active:
+        type: boolean
+      name:
+        maxLength: 255
+        type: string
+    required:
+      - is_active
+    type: object
+  dto.UpdateRelationshipRequest:
+    properties:
+      is_active:
+        type: boolean
+      name:
+        maxLength: 100
+        type: string
+    required:
+      - is_active
+    type: object
+  model.Country:
+    properties:
+      code:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      is_active:
+        type: boolean
+      name:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  model.Currency:
+    properties:
+      code:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      is_active:
+        type: boolean
+      name:
+        type: string
+      symbol:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  model.Occupation:
+    properties:
+      code:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      is_active:
+        type: boolean
+      name:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  model.Relationship:
+    properties:
+      code:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      is_active:
+        type: boolean
+      name:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  utils.APIResponse:
+    properties:
+      data: {}
+      errors: {}
+      message:
+        type: string
+      status:
+        type: string
+    type: object
+host: localhost:8081
+info:
+  contact: {}
+  description: Master Data Service for Countries, Currencies, Occupations, etc.
+  title: Insurance Master Service API
+  version: "1.0"
+paths:
+  /countries:
+    get:
+      parameters:
+        - description: Page number
+          in: query
+          name: page
+          type: integer
+        - description: Items per page
+          in: query
+          name: limit
+          type: integer
+        - description: Search by name or code
+          in: query
+          name: search
+          type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+              - $ref: "#/definitions/utils.APIResponse"
+              - properties:
+                  data:
+                    additionalProperties: true
+                    type: object
+                type: object
+      security:
+        - BearerAuth: []
+      summary: Get all countries
+      tags:
+        - Countries
+    post:
+      consumes:
+        - application/json
+      parameters:
+        - description: Country data
+          in: body
+          name: country
+          required: true
+          schema:
+            $ref: "#/definitions/dto.CreateCountryRequest"
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+              - $ref: "#/definitions/utils.APIResponse"
+              - properties:
+                  data:
+                    $ref: "#/definitions/model.Country"
+                type: object
+      security:
+        - BearerAuth: []
+      summary: Create a new country
+      tags:
+        - Countries
+  /countries/{id}:
+    delete:
+      parameters:
+        - description: Country ID
+          in: path
+          name: id
+          required: true
+          type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/utils.APIResponse"
+      security:
+        - BearerAuth: []
+      summary: Delete a country
+      tags:
+        - Countries
+    get:
+      parameters:
+        - description: Country ID
+          in: path
+          name: id
+          required: true
+          type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+              - $ref: "#/definitions/utils.APIResponse"
+              - properties:
+                  data:
+                    $ref: "#/definitions/model.Country"
+                type: object
+      security:
+        - BearerAuth: []
+      summary: Get a single country
+      tags:
+        - Countries
+    put:
+      consumes:
+        - application/json
+      parameters:
+        - description: Country ID
+          in: path
+          name: id
+          required: true
+          type: string
+        - description: Update data
+          in: body
+          name: country
+          required: true
+          schema:
+            $ref: "#/definitions/dto.UpdateCountryRequest"
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+              - $ref: "#/definitions/utils.APIResponse"
+              - properties:
+                  data:
+                    $ref: "#/definitions/model.Country"
+                type: object
+      security:
+        - BearerAuth: []
+      summary: Update a country
+      tags:
+        - Countries
+  /currencies:
+    get:
+      parameters:
+        - description: Page number
+          in: query
+          name: page
+          type: integer
+        - description: Items per page
+          in: query
+          name: limit
+          type: integer
+        - description: Search by name or code
+          in: query
+          name: search
+          type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+              - $ref: "#/definitions/utils.APIResponse"
+              - properties:
+                  data:
+                    additionalProperties: true
+                    type: object
+                type: object
+      security:
+        - BearerAuth: []
+      summary: Get all currencies
+      tags:
+        - Currencies
+    post:
+      consumes:
+        - application/json
+      parameters:
+        - description: Currency data
+          in: body
+          name: currency
+          required: true
+          schema:
+            $ref: "#/definitions/dto.CreateCurrencyRequest"
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+              - $ref: "#/definitions/utils.APIResponse"
+              - properties:
+                  data:
+                    $ref: "#/definitions/model.Currency"
+                type: object
+      security:
+        - BearerAuth: []
+      summary: Create a new currency
+      tags:
+        - Currencies
+  /currencies/{id}:
+    delete:
+      parameters:
+        - description: Currency ID
+          in: path
+          name: id
+          required: true
+          type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/utils.APIResponse"
+      security:
+        - BearerAuth: []
+      summary: Delete a currency
+      tags:
+        - Currencies
+    get:
+      parameters:
+        - description: Currency ID
+          in: path
+          name: id
+          required: true
+          type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+              - $ref: "#/definitions/utils.APIResponse"
+              - properties:
+                  data:
+                    $ref: "#/definitions/model.Currency"
+                type: object
+      security:
+        - BearerAuth: []
+      summary: Get a single currency
+      tags:
+        - Currencies
+    put:
+      consumes:
+        - application/json
+      parameters:
+        - description: Currency ID
+          in: path
+          name: id
+          required: true
+          type: string
+        - description: Update data
+          in: body
+          name: currency
+          required: true
+          schema:
+            $ref: "#/definitions/dto.UpdateCurrencyRequest"
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+              - $ref: "#/definitions/utils.APIResponse"
+              - properties:
+                  data:
+                    $ref: "#/definitions/model.Currency"
+                type: object
+      security:
+        - BearerAuth: []
+      summary: Update a currency
+      tags:
+        - Currencies
+  /occupations:
+    get:
+      parameters:
+        - description: Page number
+          in: query
+          name: page
+          type: integer
+        - description: Items per page
+          in: query
+          name: limit
+          type: integer
+        - description: Search by name or code
+          in: query
+          name: search
+          type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+              - $ref: "#/definitions/utils.APIResponse"
+              - properties:
+                  data:
+                    additionalProperties: true
+                    type: object
+                type: object
+      security:
+        - BearerAuth: []
+      summary: Get all occupations
+      tags:
+        - Occupations
+    post:
+      consumes:
+        - application/json
+      parameters:
+        - description: Occupation data
+          in: body
+          name: occupation
+          required: true
+          schema:
+            $ref: "#/definitions/dto.CreateOccupationRequest"
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+              - $ref: "#/definitions/utils.APIResponse"
+              - properties:
+                  data:
+                    $ref: "#/definitions/model.Occupation"
+                type: object
+      security:
+        - BearerAuth: []
+      summary: Create a new occupation
+      tags:
+        - Occupations
+  /occupations/{id}:
+    delete:
+      parameters:
+        - description: Occupation ID
+          in: path
+          name: id
+          required: true
+          type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/utils.APIResponse"
+      security:
+        - BearerAuth: []
+      summary: Delete an occupation
+      tags:
+        - Occupations
+    get:
+      parameters:
+        - description: Occupation ID
+          in: path
+          name: id
+          required: true
+          type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+              - $ref: "#/definitions/utils.APIResponse"
+              - properties:
+                  data:
+                    $ref: "#/definitions/model.Occupation"
+                type: object
+      security:
+        - BearerAuth: []
+      summary: Get a single occupation
+      tags:
+        - Occupations
+    put:
+      consumes:
+        - application/json
+      parameters:
+        - description: Occupation ID
+          in: path
+          name: id
+          required: true
+          type: string
+        - description: Update data
+          in: body
+          name: occupation
+          required: true
+          schema:
+            $ref: "#/definitions/dto.UpdateOccupationRequest"
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+              - $ref: "#/definitions/utils.APIResponse"
+              - properties:
+                  data:
+                    $ref: "#/definitions/model.Occupation"
+                type: object
+      security:
+        - BearerAuth: []
+      summary: Update an occupation
+      tags:
+        - Occupations
+  /relationships:
+    get:
+      parameters:
+        - description: Page number
+          in: query
+          name: page
+          type: integer
+        - description: Items per page
+          in: query
+          name: limit
+          type: integer
+        - description: Search by name or code
+          in: query
+          name: search
+          type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+              - $ref: "#/definitions/utils.APIResponse"
+              - properties:
+                  data:
+                    additionalProperties: true
+                    type: object
+                type: object
+      security:
+        - BearerAuth: []
+      summary: Get all relationships
+      tags:
+        - Relationships
+    post:
+      consumes:
+        - application/json
+      parameters:
+        - description: Relationship data
+          in: body
+          name: relationship
+          required: true
+          schema:
+            $ref: "#/definitions/dto.CreateRelationshipRequest"
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+              - $ref: "#/definitions/utils.APIResponse"
+              - properties:
+                  data:
+                    $ref: "#/definitions/model.Relationship"
+                type: object
+      security:
+        - BearerAuth: []
+      summary: Create a new relationship
+      tags:
+        - Relationships
+  /relationships/{id}:
+    delete:
+      parameters:
+        - description: Relationship ID
+          in: path
+          name: id
+          required: true
+          type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/utils.APIResponse"
+      security:
+        - BearerAuth: []
+      summary: Delete a relationship
+      tags:
+        - Relationships
+    get:
+      parameters:
+        - description: Relationship ID
+          in: path
+          name: id
+          required: true
+          type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+              - $ref: "#/definitions/utils.APIResponse"
+              - properties:
+                  data:
+                    $ref: "#/definitions/model.Relationship"
+                type: object
+      security:
+        - BearerAuth: []
+      summary: Get a single relationship
+      tags:
+        - Relationships
+    put:
+      consumes:
+        - application/json
+      parameters:
+        - description: Relationship ID
+          in: path
+          name: id
+          required: true
+          type: string
+        - description: Update data
+          in: body
+          name: relationship
+          required: true
+          schema:
+            $ref: "#/definitions/dto.UpdateRelationshipRequest"
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+              - $ref: "#/definitions/utils.APIResponse"
+              - properties:
+                  data:
+                    $ref: "#/definitions/model.Relationship"
+                type: object
+      security:
+        - BearerAuth: []
+      summary: Update a relationship
+      tags:
+        - Relationships
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
