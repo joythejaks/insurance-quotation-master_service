@@ -20,6 +20,7 @@ import (
 	"github.com/jordisetiawan/insurance-master-service/internal/middleware"
 	"github.com/jordisetiawan/insurance-master-service/internal/repository"
 	"github.com/jordisetiawan/insurance-master-service/internal/router"
+	"github.com/jordisetiawan/insurance-master-service/internal/service"
 	"github.com/jordisetiawan/insurance-master-service/internal/utils"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -48,21 +49,34 @@ func main() {
 	}
 
 	countryRepo := repository.NewCountryRepository(db)
-	countryHandler := handler.NewCountryHandler(countryRepo)
+
+	countryService := service.NewCountryService(
+		countryRepo,
+	)
+
+	countryHandler := handler.NewCountryHandler(
+		countryService,
+	)
 
 	currencyRepo := repository.NewCurrencyRepository(db)
-	currencyHandler := handler.NewCurrencyHandler(currencyRepo)
+	currencyService := service.NewCurrencyService(currencyRepo)
+	currencyHandler := handler.NewCurrencyHandler(currencyService)
 
 	occupationRepo := repository.NewOccupationRepository(db)
-	occupationHandler := handler.NewOccupationHandler(occupationRepo)
+	occupationService := service.NewOccupationService(occupationRepo)
+	occupationHandler := handler.NewOccupationHandler(occupationService)
 
 	relationshipRepo := repository.NewRelationshipRepository(db)
-	relationshipHandler := handler.NewRelationshipHandler(relationshipRepo)
+	relationshipService := service.NewRelationshipService(relationshipRepo)
+	relationshipHandler := handler.NewRelationshipHandler(relationshipService)
+
+	healthHandler := handler.NewHealthHandler(db)
 
 	r := gin.Default()
 	r.Use(middleware.ErrorHandler())
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	r.GET("/health", healthHandler.Health)
 
 	router.SetupCountryRoutes(r, countryHandler, cfg.JWTSecret)
 	router.SetupCurrencyRoutes(r, currencyHandler, cfg.JWTSecret)

@@ -5,20 +5,22 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/jordisetiawan/insurance-master-service/internal/dto"
-	"github.com/jordisetiawan/insurance-master-service/internal/model"
-	"github.com/jordisetiawan/insurance-master-service/internal/repository"
+	"github.com/jordisetiawan/insurance-master-service/internal/service"
 	"github.com/jordisetiawan/insurance-master-service/internal/utils"
 	"gorm.io/gorm"
 )
 
 type CurrencyHandler struct {
-	repo repository.CurrencyRepository
+	service service.CurrencyService
 }
 
-func NewCurrencyHandler(repo repository.CurrencyRepository) *CurrencyHandler {
-	return &CurrencyHandler{repo: repo}
+func NewCurrencyHandler(
+	service service.CurrencyService,
+) *CurrencyHandler {
+	return &CurrencyHandler{
+		service: service,
+	}
 }
 
 // @Summary Get all currencies
@@ -34,7 +36,11 @@ func (h *CurrencyHandler) GetCurrencies(c *gin.Context) {
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
 	search := c.Query("search")
 
-	currencies, total, err := h.repo.FindAll(page, limit, search)
+	currencies, total, err := h.service.GetCurrencies(
+		page,
+		limit,
+		search,
+	)
 	if err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to fetch currencies", err.Error())
 		return
@@ -64,15 +70,8 @@ func (h *CurrencyHandler) CreateCurrency(c *gin.Context) {
 		return
 	}
 
-	currency := model.Currency{
-		ID:       uuid.New(),
-		Code:     req.Code,
-		Name:     req.Name,
-		Symbol:   req.Symbol,
-		IsActive: true,
-	}
-
-	if err := h.repo.Create(&currency); err != nil {
+	currency, err := h.service.CreateCurrency(req)
+	if err != nil {
 		if err == gorm.ErrDuplicatedKey {
 			utils.ErrorResponse(c, http.StatusConflict, "Currency code already exists", nil)
 			return
@@ -92,7 +91,7 @@ func (h *CurrencyHandler) CreateCurrency(c *gin.Context) {
 // @Router /currencies/{id} [get]
 func (h *CurrencyHandler) GetCurrency(c *gin.Context) {
 	id := c.Param("id")
-	currency, err := h.repo.FindByID(id)
+	currency, err := h.service.GetCurrency(id)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			utils.ErrorResponse(c, http.StatusNotFound, "Currency not found", nil)
@@ -121,24 +120,16 @@ func (h *CurrencyHandler) UpdateCurrency(c *gin.Context) {
 		return
 	}
 
-	currency, err := h.repo.FindByID(id)
+	currency, err := h.service.UpdateCurrency(
+		id,
+		req,
+	)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			utils.ErrorResponse(c, http.StatusNotFound, "Currency not found", nil)
 			return
 		}
 		utils.ErrorResponse(c, http.StatusInternalServerError, "Internal Server Error", err.Error())
-		return
-	}
-
-	if req.Name != "" {
-		currency.Name = req.Name
-	}
-	currency.Symbol = req.Symbol
-	currency.IsActive = req.IsActive
-
-	if err := h.repo.Update(currency); err != nil {
-		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to update currency", err.Error())
 		return
 	}
 
@@ -153,7 +144,7 @@ func (h *CurrencyHandler) UpdateCurrency(c *gin.Context) {
 // @Router /currencies/{id} [delete]
 func (h *CurrencyHandler) DeleteCurrency(c *gin.Context) {
 	id := c.Param("id")
-	if err := h.repo.Delete(id); err != nil {
+	if err := h.service.DeleteCurrency(id); err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to delete currency", err.Error())
 		return
 	}

@@ -5,20 +5,22 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/jordisetiawan/insurance-master-service/internal/dto"
-	"github.com/jordisetiawan/insurance-master-service/internal/model"
-	"github.com/jordisetiawan/insurance-master-service/internal/repository"
+	"github.com/jordisetiawan/insurance-master-service/internal/service"
 	"github.com/jordisetiawan/insurance-master-service/internal/utils"
 	"gorm.io/gorm"
 )
 
 type RelationshipHandler struct {
-	repo repository.RelationshipRepository
+	service service.RelationshipService
 }
 
-func NewRelationshipHandler(repo repository.RelationshipRepository) *RelationshipHandler {
-	return &RelationshipHandler{repo: repo}
+func NewRelationshipHandler(
+	service service.RelationshipService,
+) *RelationshipHandler {
+	return &RelationshipHandler{
+		service: service,
+	}
 }
 
 // @Summary Get all relationships
@@ -34,7 +36,11 @@ func (h *RelationshipHandler) GetRelationships(c *gin.Context) {
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
 	search := c.Query("search")
 
-	relationships, total, err := h.repo.FindAll(page, limit, search)
+	relationships, total, err := h.service.GetRelationships(
+		page,
+		limit,
+		search,
+	)
 	if err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to fetch relationships", err.Error())
 		return
@@ -63,15 +69,9 @@ func (h *RelationshipHandler) CreateRelationship(c *gin.Context) {
 		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid input", err.Error())
 		return
 	}
+	relationship, err := h.service.CreateRelationship(req)
 
-	relationship := model.Relationship{
-		ID:       uuid.New(),
-		Code:     req.Code,
-		Name:     req.Name,
-		IsActive: true,
-	}
-
-	if err := h.repo.Create(&relationship); err != nil {
+	if err != nil {
 		if err == gorm.ErrDuplicatedKey {
 			utils.ErrorResponse(c, http.StatusConflict, "Relationship code already exists", nil)
 			return
@@ -91,7 +91,7 @@ func (h *RelationshipHandler) CreateRelationship(c *gin.Context) {
 // @Router /relationships/{id} [get]
 func (h *RelationshipHandler) GetRelationship(c *gin.Context) {
 	id := c.Param("id")
-	relationship, err := h.repo.FindByID(id)
+	relationship, err := h.service.GetRelationship(id)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			utils.ErrorResponse(c, http.StatusNotFound, "Relationship not found", nil)
@@ -120,7 +120,10 @@ func (h *RelationshipHandler) UpdateRelationship(c *gin.Context) {
 		return
 	}
 
-	relationship, err := h.repo.FindByID(id)
+	relationship, err := h.service.UpdateRelationship(
+		id,
+		req,
+	)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			utils.ErrorResponse(c, http.StatusNotFound, "Relationship not found", nil)
@@ -129,17 +132,6 @@ func (h *RelationshipHandler) UpdateRelationship(c *gin.Context) {
 		utils.ErrorResponse(c, http.StatusInternalServerError, "Internal Server Error", err.Error())
 		return
 	}
-
-	if req.Name != "" {
-		relationship.Name = req.Name
-	}
-	relationship.IsActive = req.IsActive
-
-	if err := h.repo.Update(relationship); err != nil {
-		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to update relationship", err.Error())
-		return
-	}
-
 	utils.SuccessResponse(c, http.StatusOK, "Relationship updated successfully", relationship)
 }
 
@@ -151,7 +143,7 @@ func (h *RelationshipHandler) UpdateRelationship(c *gin.Context) {
 // @Router /relationships/{id} [delete]
 func (h *RelationshipHandler) DeleteRelationship(c *gin.Context) {
 	id := c.Param("id")
-	if err := h.repo.Delete(id); err != nil {
+	if err := h.service.DeleteRelationship(id); err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to delete relationship", err.Error())
 		return
 	}

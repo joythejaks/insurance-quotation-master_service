@@ -5,20 +5,22 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/jordisetiawan/insurance-master-service/internal/dto"
-	"github.com/jordisetiawan/insurance-master-service/internal/model"
-	"github.com/jordisetiawan/insurance-master-service/internal/repository"
+	"github.com/jordisetiawan/insurance-master-service/internal/service"
 	"github.com/jordisetiawan/insurance-master-service/internal/utils"
 	"gorm.io/gorm"
 )
 
 type CountryHandler struct {
-	repo repository.CountryRepository
+	service service.CountryService
 }
 
-func NewCountryHandler(repo repository.CountryRepository) *CountryHandler {
-	return &CountryHandler{repo: repo}
+func NewCountryHandler(
+	service service.CountryService,
+) *CountryHandler {
+	return &CountryHandler{
+		service: service,
+	}
 }
 
 // @Summary Get all countries
@@ -34,7 +36,11 @@ func (h *CountryHandler) GetCountries(c *gin.Context) {
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
 	search := c.Query("search")
 
-	countries, total, err := h.repo.FindAll(page, limit, search)
+	countries, total, err := h.service.GetCountries(
+		page,
+		limit,
+		search,
+	)
 	if err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to fetch countries", err.Error())
 		return
@@ -64,14 +70,8 @@ func (h *CountryHandler) CreateCountry(c *gin.Context) {
 		return
 	}
 
-	country := model.Country{
-		ID:       uuid.New(),
-		Code:     req.Code,
-		Name:     req.Name,
-		IsActive: true,
-	}
-
-	if err := h.repo.Create(&country); err != nil {
+	country, err := h.service.CreateCountry(req)
+	if err != nil {
 		// Handle unique constraint error for 'code'
 		if err == gorm.ErrDuplicatedKey {
 			utils.ErrorResponse(c, http.StatusConflict, "Country with this code already exists", nil)
@@ -92,7 +92,7 @@ func (h *CountryHandler) CreateCountry(c *gin.Context) {
 // @Router /countries/{id} [get]
 func (h *CountryHandler) GetCountry(c *gin.Context) {
 	id := c.Param("id")
-	country, err := h.repo.FindByID(id)
+	country, err := h.service.GetCountry(id)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			utils.ErrorResponse(c, http.StatusNotFound, "Country not found", nil)
@@ -121,7 +121,10 @@ func (h *CountryHandler) UpdateCountry(c *gin.Context) {
 		return
 	}
 
-	country, err := h.repo.FindByID(id)
+	country, err := h.service.UpdateCountry(
+		id,
+		req,
+	)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			utils.ErrorResponse(c, http.StatusNotFound, "Country not found", nil)
@@ -130,17 +133,6 @@ func (h *CountryHandler) UpdateCountry(c *gin.Context) {
 		utils.ErrorResponse(c, http.StatusInternalServerError, "Internal Server Error", err.Error())
 		return
 	}
-
-	if req.Name != "" {
-		country.Name = req.Name
-	}
-	country.IsActive = req.IsActive
-
-	if err := h.repo.Update(country); err != nil {
-		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to update country", err.Error())
-		return
-	}
-
 	utils.SuccessResponse(c, http.StatusOK, "Country updated successfully", country)
 }
 
@@ -152,7 +144,7 @@ func (h *CountryHandler) UpdateCountry(c *gin.Context) {
 // @Router /countries/{id} [delete]
 func (h *CountryHandler) DeleteCountry(c *gin.Context) {
 	id := c.Param("id")
-	if err := h.repo.Delete(id); err != nil {
+	if err := h.service.DeleteCountry(id); err != nil {
 		if err == gorm.ErrRecordNotFound {
 			utils.ErrorResponse(c, http.StatusNotFound, "Country not found", nil)
 			return

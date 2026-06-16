@@ -5,20 +5,22 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/jordisetiawan/insurance-master-service/internal/dto"
-	"github.com/jordisetiawan/insurance-master-service/internal/model"
-	"github.com/jordisetiawan/insurance-master-service/internal/repository"
+	"github.com/jordisetiawan/insurance-master-service/internal/service"
 	"github.com/jordisetiawan/insurance-master-service/internal/utils"
 	"gorm.io/gorm"
 )
 
 type OccupationHandler struct {
-	repo repository.OccupationRepository
+	service service.OccupationService
 }
 
-func NewOccupationHandler(repo repository.OccupationRepository) *OccupationHandler {
-	return &OccupationHandler{repo: repo}
+func NewOccupationHandler(
+	service service.OccupationService,
+) *OccupationHandler {
+	return &OccupationHandler{
+		service: service,
+	}
 }
 
 // @Summary Get all occupations
@@ -34,7 +36,11 @@ func (h *OccupationHandler) GetOccupations(c *gin.Context) {
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
 	search := c.Query("search")
 
-	occupations, total, err := h.repo.FindAll(page, limit, search)
+	occupations, total, err := h.service.GetOccupations(
+		page,
+		limit,
+		search,
+	)
 	if err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to fetch occupations", err.Error())
 		return
@@ -63,15 +69,9 @@ func (h *OccupationHandler) CreateOccupation(c *gin.Context) {
 		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid input", err.Error())
 		return
 	}
+	occupation, err := h.service.CreateOccupation(req)
 
-	occupation := model.Occupation{
-		ID:       uuid.New(),
-		Code:     req.Code,
-		Name:     req.Name,
-		IsActive: true,
-	}
-
-	if err := h.repo.Create(&occupation); err != nil {
+	if err != nil {
 		if err == gorm.ErrDuplicatedKey {
 			utils.ErrorResponse(c, http.StatusConflict, "Occupation code already exists", nil)
 			return
@@ -91,7 +91,7 @@ func (h *OccupationHandler) CreateOccupation(c *gin.Context) {
 // @Router /occupations/{id} [get]
 func (h *OccupationHandler) GetOccupation(c *gin.Context) {
 	id := c.Param("id")
-	occupation, err := h.repo.FindByID(id)
+	occupation, err := h.service.GetOccupation(id)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			utils.ErrorResponse(c, http.StatusNotFound, "Occupation not found", nil)
@@ -120,23 +120,16 @@ func (h *OccupationHandler) UpdateOccupation(c *gin.Context) {
 		return
 	}
 
-	occupation, err := h.repo.FindByID(id)
+	occupation, err := h.service.UpdateOccupation(
+		id,
+		req,
+	)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			utils.ErrorResponse(c, http.StatusNotFound, "Occupation not found", nil)
 			return
 		}
 		utils.ErrorResponse(c, http.StatusInternalServerError, "Internal Server Error", err.Error())
-		return
-	}
-
-	if req.Name != "" {
-		occupation.Name = req.Name
-	}
-	occupation.IsActive = req.IsActive
-
-	if err := h.repo.Update(occupation); err != nil {
-		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to update occupation", err.Error())
 		return
 	}
 
@@ -151,7 +144,7 @@ func (h *OccupationHandler) UpdateOccupation(c *gin.Context) {
 // @Router /occupations/{id} [delete]
 func (h *OccupationHandler) DeleteOccupation(c *gin.Context) {
 	id := c.Param("id")
-	if err := h.repo.Delete(id); err != nil {
+	if err := h.service.DeleteOccupation(id); err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to delete occupation", err.Error())
 		return
 	}
