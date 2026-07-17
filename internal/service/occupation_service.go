@@ -73,7 +73,9 @@ func (s *occupationService) UpdateOccupation(
 		occupation.Name = req.Name
 	}
 
-	occupation.IsActive = req.IsActive
+	if req.IsActive != nil {
+		occupation.IsActive = *req.IsActive
+	}
 
 	if err := s.repo.Update(occupation); err != nil {
 		return nil, err

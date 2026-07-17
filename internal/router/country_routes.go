@@ -10,28 +10,26 @@ func SetupCountryRoutes(r *gin.Engine, countryHandler *handler.CountryHandler, s
 	api := r.Group("/api/v1")
 	{
 		countries := api.Group("/countries")
+		countries.Use(middleware.AuthMiddleware(secret))
 		{
-			// Publicly accessible GET endpoints (or protected by AuthMiddleware only)
+			// Authenticated read access
 			countries.GET("", countryHandler.GetCountries)
 			countries.GET("/:id", countryHandler.GetCountry)
 
 			// Admin-only endpoints with specific permissions
 			countries.POST("", // Create Country
-				middleware.AuthMiddleware(secret),
 				middleware.RoleMiddleware("ADMIN"),
 				middleware.PermissionMiddleware("manage_master_data"), // Contoh permission
 				countryHandler.CreateCountry,
 			)
 
 			countries.PUT("/:id", // Update Country
-				middleware.AuthMiddleware(secret),
 				middleware.RoleMiddleware("ADMIN"),
 				middleware.PermissionMiddleware("manage_master_data"), // Contoh permission
 				countryHandler.UpdateCountry,
 			)
 
 			countries.DELETE("/:id", // Delete Country
-				middleware.AuthMiddleware(secret),
 				middleware.RoleMiddleware("ADMIN"),
 				middleware.PermissionMiddleware("manage_master_data"), // Contoh permission
 				countryHandler.DeleteCountry,

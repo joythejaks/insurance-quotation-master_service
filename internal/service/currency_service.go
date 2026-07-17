@@ -75,7 +75,10 @@ func (s *currencyService) UpdateCurrency(
 	}
 
 	currency.Symbol = req.Symbol
-	currency.IsActive = req.IsActive
+
+	if req.IsActive != nil {
+		currency.IsActive = *req.IsActive
+	}
 
 	if err := s.repo.Update(currency); err != nil {
 		return nil, err

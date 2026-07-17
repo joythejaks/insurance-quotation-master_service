@@ -37,7 +37,7 @@ func AuthMiddleware(secret string) gin.HandlerFunc {
 		tokenString := parts[1]
 		token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 			return []byte(secret), nil
-		})
+		}, jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Name}))
 
 		if err != nil || !token.Valid {
 			utils.ErrorResponse(c, http.StatusUnauthorized, "Invalid or expired token", err.Error())

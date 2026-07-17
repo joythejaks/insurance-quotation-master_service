@@ -73,7 +73,9 @@ func (s *relationshipService) UpdateRelationship(
 		relationship.Name = req.Name
 	}
 
-	relationship.IsActive = req.IsActive
+	if req.IsActive != nil {
+		relationship.IsActive = *req.IsActive
+	}
 
 	if err := s.repo.Update(relationship); err != nil {
 		return nil, err

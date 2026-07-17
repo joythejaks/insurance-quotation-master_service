@@ -73,7 +73,9 @@ func (s *countryService) UpdateCountry(
 		country.Name = req.Name
 	}
 
-	country.IsActive = req.IsActive
+	if req.IsActive != nil {
+		country.IsActive = *req.IsActive
+	}
 
 	if err := s.repo.Update(country); err != nil {
 		return nil, err
